@@ -22,7 +22,9 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "pwm_control.h"
+#include "pid.h"
+#include "pv.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -32,7 +34,7 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define LENGTH_BUF 2
+#define LENGTH_BUF 3
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -50,7 +52,7 @@ TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 
 uint16_t adc_raw_data[LENGTH_BUF] = {0};
-
+uint16_t control_val;
 
 /* USER CODE END PV */
 
@@ -111,7 +113,7 @@ int main(void)
   //HAL_TIM_Base_Start_DMA(&htim2, (uint16_t *)adc_raw_data, LENGTH_BUF);
   HAL_TIM_Base_Start(&htim2);
 
-  HAL_ADC_Start_DMA(&hadc1, (uint16_t *)adc_raw_data, LENGTH_BUF);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_raw_data, LENGTH_BUF);
 
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
@@ -208,7 +210,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConvEdge = ADC_EXTERNALTRIGCONVEDGE_RISING;
   hadc1.Init.ExternalTrigConv = ADC_EXTERNALTRIGCONV_T2_TRGO;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 2;
+  hadc1.Init.NbrOfConversion = 3;
   hadc1.Init.DMAContinuousRequests = DISABLE;
   hadc1.Init.EOCSelection = ADC_EOC_SEQ_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
@@ -228,6 +230,14 @@ static void MX_ADC1_Init(void)
   */
   sConfig.Channel = ADC_CHANNEL_2;
   sConfig.Rank = 2;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
+  */
+  sConfig.Channel = ADC_CHANNEL_3;
+  sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     Error_Handler();
@@ -522,15 +532,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
    */
   //adc_val = (uint16_t)HAL_ADC_GetValue(&hadc1);
 
-  double pot1_double = ((double)adc_raw_data[0] / 4096) * 420;
+  //double pot1_double = ((double)adc_raw_data[0] / 4096) * 420;
 
-  uint16_t pot1_value = (uint16_t)pot1_double;
+  //uint16_t pot1_value = (uint16_t)pot1_double;
 
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, pot1_value);
+  control_val = PWM_GenerateControlSignal(adc_raw_data[0]);
 
 
-  HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-  HAL_ADC_Start_DMA(&hadc1, (uint16_t *)adc_raw_data, LENGTH_BUF);
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, control_val);
+
+  //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+  HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_raw_data, LENGTH_BUF);
+
+
+
 }
 
 
