@@ -1,7 +1,7 @@
 #ifndef _PV_H
 #define _PH_H
 
-#define NUMBER_OF_POINTS 10000
+#define NUMBER_OF_POINTS 20000
 
 #define k 1.38064852e-23
 #define q 1.602176634e-19
@@ -17,7 +17,7 @@
 
 typedef struct
 {
-	float voltageLookUpTable[NUMBER_OF_POINTS];
+	//float voltageLookUpTable[NUMBER_OF_POINTS];
 	float currentLookUpTable[NUMBER_OF_POINTS];
 
 	float Voc;

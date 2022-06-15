@@ -59,14 +59,13 @@ void PVModelInit(PVpanel *panel, float Voc, float Isc, float Vmp, float Imp, flo
 	panel->I0 = eq_6_num / eq_6_den;
 
 	//Calculate photocurrent Ipv
-	//To Ipv exei eksarthsh kai apo to G kai apo thn gwnia prosptvshs kai apo ta arxidia moy
-	//Tha to kanw pio meta
+	//To Ipv exei eksarthsh kai apo to G kai apo thn gwnia prosptvshs **NEEDS FIXING**
 	panel->Ipv = ((panel->Rsh + panel->Rs) / panel->Rsh)*panel->Isc;
 
 	//Fill V array and zero the I array
 	for (int i = 0; i < NUMBER_OF_POINTS; i++)
 	{
-		panel->voltageLookUpTable[i] = i*panel->Voc/(NUMBER_OF_POINTS - 1);
+		//panel->voltageLookUpTable[i] = i*panel->Voc/(NUMBER_OF_POINTS - 1);
 		panel->currentLookUpTable[i] = 0;
 	}
 
@@ -74,13 +73,14 @@ void PVModelInit(PVpanel *panel, float Voc, float Isc, float Vmp, float Imp, flo
 	{
 		for (int j = 0; j < MAX_ITERATIONS; j++)
 		{
-			float exponent_value = (panel->voltageLookUpTable[i] + panel->currentLookUpTable[i]*panel->Rs) / (panel->a*panel->Vthermal);
+			float voltageAtThisPoint = i*panel->Voc/(NUMBER_OF_POINTS - 1);
+			//float voltageAtThisPoint = panel->voltageLookUpTable[i];
+			float exponent_value = (voltageAtThisPoint + panel->currentLookUpTable[i]*panel->Rs) / (panel->a*panel->Vthermal);
 			float term1 = panel->I0*(expf(exponent_value) - 1);
-			float term2 = (panel->voltageLookUpTable[i] + panel->currentLookUpTable[i]*panel->Rs) / panel->Rsh;
+			float term2 = (voltageAtThisPoint + panel->currentLookUpTable[i]*panel->Rs) / panel->Rsh;
 			panel->currentLookUpTable[i] = panel->Ipv - term1 - term2;
 		}
 	}
-
 }
 
 float PVModelGetCurrentFromVoltage(PVpanel *panel, float voltage)
