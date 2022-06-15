@@ -66,7 +66,7 @@ void PVModelInit(PVpanel *panel, float Voc, float Isc, float Vmp, float Imp, flo
 	//Fill V array and zero the I array
 	for (int i = 0; i < NUMBER_OF_POINTS; i++)
 	{
-		panel->voltageLookUpTable[i] = i*Voc/(NUMBER_OF_POINTS - 1);
+		panel->voltageLookUpTable[i] = i*panel->Voc/(NUMBER_OF_POINTS - 1);
 		panel->currentLookUpTable[i] = 0;
 	}
 
@@ -85,7 +85,8 @@ void PVModelInit(PVpanel *panel, float Voc, float Isc, float Vmp, float Imp, flo
 
 float PVModelGetCurrentFromVoltage(PVpanel *panel, float voltage)
 {
-	return -1;
+	uint16_t index = (uint16_t) voltage / (panel->Voc/(NUMBER_OF_POINTS - 1));
+	return panel->currentLookUpTable[index];
 }
 
 void PVModelUpdateModelRealTime(PVpanel *old_panel, PVpanel *new_panel)
