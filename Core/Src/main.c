@@ -19,7 +19,6 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pwm_control.h"
@@ -54,6 +53,16 @@ TIM_HandleTypeDef htim2;
 uint16_t adc_raw_data[LENGTH_BUF] = {0};
 uint16_t control_val;
 
+// Create a PV object
+PVpanel pv_panel;
+float v_oc 	= 45;
+float i_sc 	= 8.5;
+float v_mp 	= 39;
+float i_mp 	= 8;
+float G 	= 1000;
+float T 	= 25;
+
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -81,6 +90,7 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
+  PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
 
 
   /* USER CODE END 1 */
@@ -535,6 +545,9 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   //double pot1_double = ((double)adc_raw_data[0] / 4096) * 420;
 
   //uint16_t pot1_value = (uint16_t)pot1_double;
+
+
+
 
   control_val = PWM_GenerateControlSignal(adc_raw_data[0]);
 
