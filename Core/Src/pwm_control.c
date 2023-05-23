@@ -10,5 +10,5 @@ uint16_t PWM_GenerateControlSignal(uint16_t input_data)
 
 
 
-	return 50;
+	return 200;
 }

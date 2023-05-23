@@ -91,5 +91,5 @@ float PVModelGetCurrentFromVoltage(PVpanel *panel, float voltage)
 
 void PVModelUpdateModelRealTime(PVpanel *old_panel, PVpanel *new_panel)
 {
-
+	return;
 }

@@ -1,14 +1,14 @@
-#ifndef __FILTER_H
-#define __FILTER_H
+#ifndef __FILTER_C
+#define __FILTER_C
 
 typedef struct
 {
-    int debug;
+
 } LPassFilter;
 
 typedef struct
 {
-    int debug;
+
 } HPassFilter;
 
 void LPassFilterInit(LPassFilter *);
