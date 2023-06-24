@@ -5,7 +5,7 @@
 
 #define k 1.38064852e-23
 #define q 1.602176634e-19
-#define MAX_ITERATIONS 50
+#define MAX_ITERATIONS 30
 #define RANGE_FACTOR 1.25
 
 #define UNITY_CELL_VOC 0.7

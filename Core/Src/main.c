@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "pwm_control.h"
@@ -52,6 +53,23 @@ TIM_HandleTypeDef htim2;
 
 uint16_t adc_raw_data[LENGTH_BUF] = {0};
 uint16_t control_val;
+
+uint16_t adc_output_current = 0;
+uint16_t adc_output_voltage = 0;
+uint16_t adc_input_voltage = 0;
+
+float real_output_current = 0;
+float real_output_voltage = 0;
+float real_input_voltage = 0;
+
+
+uint16_t adc_output_current_addr = 0;
+uint16_t adc_output_voltage_addr = 0;
+uint16_t adc_input_voltage_addr = 0;
+
+// REFS //
+float ref_output_current = 0;
+
 
 // Create a PV object
 PVpanel pv_panel;
@@ -90,7 +108,7 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
+  //PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
 
 
   /* USER CODE END 1 */
@@ -128,6 +146,9 @@ int main(void)
 
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   HAL_TIMEx_PWMN_Start(&htim1, TIM_CHANNEL_1);
+
+  // INIT PWM
+  PWM_SetPercentage(0.5f, &htim1);
 
   /* USER CODE END 2 */
 
@@ -304,7 +325,7 @@ static void MX_TIM1_Init(void)
   {
     Error_Handler();
   }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
+  sConfigOC.OCMode = TIM_OCMODE_PWM2;
   sConfigOC.Pulse = 210;
   sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
   sConfigOC.OCNPolarity = TIM_OCNPOLARITY_HIGH;
@@ -318,7 +339,7 @@ static void MX_TIM1_Init(void)
   sBreakDeadTimeConfig.OffStateRunMode = TIM_OSSR_DISABLE;
   sBreakDeadTimeConfig.OffStateIDLEMode = TIM_OSSI_DISABLE;
   sBreakDeadTimeConfig.LockLevel = TIM_LOCKLEVEL_OFF;
-  sBreakDeadTimeConfig.DeadTime = 5;
+  sBreakDeadTimeConfig.DeadTime = 3;
   sBreakDeadTimeConfig.BreakState = TIM_BREAK_DISABLE;
   sBreakDeadTimeConfig.BreakPolarity = TIM_BREAKPOLARITY_HIGH;
   sBreakDeadTimeConfig.AutomaticOutput = TIM_AUTOMATICOUTPUT_DISABLE;
@@ -547,12 +568,23 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   //uint16_t pot1_value = (uint16_t)pot1_double;
 
 
+  // Current 	-> adc_raw_data[0]
+  // Vout 		-> adc_raw_data[1]
+  // Vin		-> adc_raw_data[2]
+  adc_output_current 	= adc_raw_data[0];
+  adc_output_voltage 	= adc_raw_data[1];
+  adc_input_voltage 	= adc_raw_data[2];
+
+  real_output_voltage 	= (float)adc_output_voltage / 91.0;
+  real_output_current	= (float)adc_output_current / 451.61;
+
+  //ref_output_current	= PVModelGetCurrentFromVoltage(&pv_panel, adc_output_voltage);
 
 
-  control_val = PWM_GenerateControlSignal(adc_raw_data[0]);
+  control_val = PWM_GenerateControlSignal(adc_output_current);
 
 
-  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, control_val);
+  //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, control_val);
 
   //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_raw_data, LENGTH_BUF);
