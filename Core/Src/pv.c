@@ -81,11 +81,27 @@ void PVModelInit(PVpanel *panel, float Voc, float Isc, float Vmp, float Imp, flo
 			panel->currentLookUpTable[i] = panel->Ipv - term1 - term2;
 		}
 	}
+	panel->is_initialized = true;
 }
 
+/**
+ * Do not use this function (PVModelGetCurrentFromVoltage) without initializing first
+ */
 float PVModelGetCurrentFromVoltage(PVpanel *panel, float voltage)
 {
-	uint16_t index = (uint16_t) voltage / (panel->Voc/(NUMBER_OF_POINTS - 1));
+	if (!panel->is_initialized) return 1;
+
+	// Clip the the voltage, every value above panel->Voc has no meaning
+	float real_voltage;
+	if (voltage > panel->Voc)
+	{
+		real_voltage = panel->Voc;
+	}
+	else
+	{
+		real_voltage = voltage;
+	}
+	uint16_t index = (uint16_t) real_voltage / (panel->Voc/(NUMBER_OF_POINTS - 1));
 	return panel->currentLookUpTable[index];
 }
 
