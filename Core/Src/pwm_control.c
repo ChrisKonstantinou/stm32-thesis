@@ -1,8 +1,6 @@
 #include "pwm_control.h"
 #include "pid.h"
 
-PIDController *controler;
-
 void PWM_SetPercentage(float percent, TIM_HandleTypeDef* htimer)
 {
 	ARR_value_tim = htimer->Instance->ARR;
