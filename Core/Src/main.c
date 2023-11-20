@@ -80,6 +80,8 @@ float i_mp 	= 8;
 float G 	= 1000;
 float T 	= 25;
 
+// Create the PID object
+PIDController pid_controller;
 
 /* USER CODE END PV */
 
@@ -108,8 +110,8 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  //PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
-
+  PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
+  PIDController_Init(&pid_controller);
 
   /* USER CODE END 1 */
 
@@ -578,19 +580,16 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   real_output_voltage 	= (float)adc_output_voltage / 91.0;
   real_output_current	= (float)adc_output_current / 451.61;
 
-  //ref_output_current	= PVModelGetCurrentFromVoltage(&pv_panel, adc_output_voltage);
+  ref_output_current	= PVModelGetCurrentFromVoltage(&pv_panel, adc_output_voltage);
 
+  control_val = PIDController_Update(&pid_controller, ref_output_current, real_output_current);
 
-  control_val = PWM_GenerateControlSignal(adc_output_current);
-
+  PWM_SetPercentage(control_val, &htim1);
 
   //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, control_val);
 
   //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_raw_data, LENGTH_BUF);
-
-
-
 }
 
 
