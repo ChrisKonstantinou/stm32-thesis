@@ -52,7 +52,7 @@ TIM_HandleTypeDef htim2;
 /* USER CODE BEGIN PV */
 
 uint16_t adc_raw_data[LENGTH_BUF] = {0};
-uint16_t control_val;
+float control_val;
 
 uint16_t adc_output_current = 0;
 uint16_t adc_output_voltage = 0;
@@ -73,13 +73,15 @@ float ref_output_current = 0;
 
 // Create a PV object
 PVpanel pv_panel;
-float v_oc 	= 45;
+float v_oc 	= 40;
 float i_sc 	= 8.5;
-float v_mp 	= 39;
+float v_mp 	= 35;
 float i_mp 	= 8;
 float G 	= 1000;
 float T 	= 25;
 
+// Create the PID object
+PIDController pid_controller;
 
 /* USER CODE END PV */
 
@@ -108,8 +110,27 @@ static void MX_TIM2_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-  //PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
 
+  // PV model initialization
+  pv_panel.is_initialized = false;
+  PVModelInit(&pv_panel, v_oc, i_sc, v_mp, i_mp, G, T);
+
+  // PID controller initialization
+  // Set up PID gains
+  pid_controller.Kp = 0.041;
+  pid_controller.Ki = 4.12;
+  pid_controller.Kd = 0.0;
+
+  pid_controller.T = 0.0001; // 10kHz sampling frequency
+
+  pid_controller.limMin = 0.00;
+  pid_controller.limMax = 0.99;
+
+  pid_controller.limMinInt = 0.00;
+  pid_controller.limMaxInt = 0.99;
+
+  // Initialize the controller
+  PIDController_Init(&pid_controller);
 
   /* USER CODE END 1 */
 
@@ -575,22 +596,20 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   adc_output_voltage 	= adc_raw_data[1];
   adc_input_voltage 	= adc_raw_data[2];
 
-  real_output_voltage 	= (float)adc_output_voltage / 91.0;
-  real_output_current	= (float)adc_output_current / 451.61;
+  real_output_voltage 	= (float)adc_output_voltage / 87.3;
+  real_output_current	= (float)adc_output_current / 410.61;
 
-  //ref_output_current	= PVModelGetCurrentFromVoltage(&pv_panel, adc_output_voltage);
+  //ref_output_current = 4; // Test value of 1 Ampere
+  ref_output_current	= PVModelGetCurrentFromVoltage(&pv_panel, real_output_voltage);
 
+  control_val = PIDController_Update(&pid_controller, ref_output_current, real_output_current);
 
-  control_val = PWM_GenerateControlSignal(adc_output_current);
-
+  PWM_SetPercentage(control_val, &htim1);
 
   //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, control_val);
 
   //HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
   HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_raw_data, LENGTH_BUF);
-
-
-
 }
 
 
