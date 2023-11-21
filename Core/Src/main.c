@@ -596,15 +596,15 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
   adc_output_voltage 	= adc_raw_data[1];
   adc_input_voltage 	= adc_raw_data[2];
 
-  real_output_voltage 	= (float)adc_output_voltage / 91.0;
-  real_output_current	= (float)adc_output_current / 451.61;
+  real_output_voltage 	= (float)adc_output_voltage / 87.3;
+  real_output_current	= (float)adc_output_current / 410.61;
 
-  //ref_output_current = 1; // Test value of 1 Ampere
+  //ref_output_current = 4; // Test value of 1 Ampere
   ref_output_current	= PVModelGetCurrentFromVoltage(&pv_panel, real_output_voltage);
 
   control_val = PIDController_Update(&pid_controller, ref_output_current, real_output_current);
 
-  // PWM_SetPercentage(control_val, &htim1);
+  PWM_SetPercentage(control_val, &htim1);
 
   //__HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, control_val);
 
